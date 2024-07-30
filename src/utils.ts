@@ -63,10 +63,12 @@ export const calculateDailyPower = (dailyMetrics: DailyMetrics): PowerResult[]  
         const avgCurrent = currents.reduce((a, b) => a + b, 0) / (currents.length || 1);
         const avgPower = avgVoltage * avgCurrent;
 
+        const roundedPower = Math.round(avgPower * 100) / 100;
+
         results.push({
             time: `${date}T00:00:00.000Z`,
             name: "Power",
-            value: avgPower
+            value: roundedPower
         });
     }
     return results;
