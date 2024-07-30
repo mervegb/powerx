@@ -1,7 +1,8 @@
 import express, { Express } from 'express';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { addReading, getReading } from './database';
+import { addReading } from './database';
+import { parseLine } from './utils';
 
 dotenv.config();
 
@@ -13,11 +14,17 @@ app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
 
 app.post('/data', async (req, res) => {
-  // TODO: parse incoming data, and save it to the database
-  // data is of the form:
-  //  {timestamp} {name} {value}
-
-  // addReading(...)
+  const data = req.body;
+  const lines = data.split('\n');
+  
+  for (const line of lines) {
+    const reading = parseLine(line);
+    if (!reading) {
+      return res.json({ success: false });
+    }
+    const key = `${reading.timestamp.getTime()}_${reading.name}`;
+    addReading(key, reading);
+  }
 
   return res.json({ success: false });
 });
