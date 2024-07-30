@@ -1,8 +1,8 @@
 import express, { Express } from 'express';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { addReading } from './database';
-import { parseLine } from './utils';
+import { addReading, getAllReadings } from './database';
+import { calculateDailyPower, filterAndOrganizeReadings, parseLine } from './utils';
 
 dotenv.config();
 
@@ -26,15 +26,21 @@ app.post('/data', async (req, res) => {
     addReading(key, reading);
   }
 
-  return res.json({ success: false });
+  return res.json({ success: true });
 });
 
-app.get('/data', async (req, res) => {
-  // TODO: check what dates have been requested, and retrieve all data within the given range
+app.get('/data', (req, res) => {
+  const { from, to } = req.query;
+  const fromDate = new Date(from as string);
+  const toDate = new Date(to as string);
 
-  // getReading(...)
-
-  return res.json({ success: false });
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return res.status(400).json({ error: "Invalid date format" });
+  }
+  const allReadings = getAllReadings()
+  const dailyMetrics = filterAndOrganizeReadings(allReadings, fromDate, toDate);
+  const powerResults = calculateDailyPower(dailyMetrics);
+  res.json(powerResults);
 });
 
 app.listen(PORT, () => console.log(`Running on port ${PORT} ⚡`));
